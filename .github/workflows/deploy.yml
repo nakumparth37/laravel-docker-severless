@@ -138,10 +138,11 @@ jobs:
         run: |
           aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY }}
 
-      - name: Build Docker Image
+      - name: Build and Push Docker Image
+        working-directory: ./deploy/lambda
         run: |
-          IMAGE_NAME=${{ secrets.ECR_REGISTRY }}/laravel-serverless:latest
-          docker build -t $IMAGE_NAME -f deploy/lambda/Dockerfile .
+          IMAGE_NAME=${{ secrets.ECR_REGISTRY }}:latest
+          docker build -t $IMAGE_NAME .
           docker push $IMAGE_NAME
 
       # -----------------------------
