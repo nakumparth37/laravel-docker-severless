@@ -1,0 +1,63 @@
+version: '3.8'
+
+services:
+  laravel:
+    restart: unless-stopped
+    container_name: serverless_app
+    build:
+      context: ./
+      dockerfile: ./deploy/local/Dockerfile
+    volumes:
+      - .:/var/www/html
+      - ./deploy/storage/app:/var/www/html/storage/app
+    # env_file:
+    #   - ./app/.env
+    ports:
+      - "8084:80"
+    networks:
+      - serverless-network
+    depends_on:
+      - database
+
+  database:
+    restart: unless-stopped
+    image: mariadb:lts-jammy
+    volumes:
+      - v-database:/var/lib/mysql
+    ports:
+      - "3309:3306"
+    environment:
+      MARIADB_DATABASE: laravel
+      MARIADB_USER: laravel
+      MARIADB_PASSWORD: laravel
+      MARIADB_ROOT_PASSWORD: root
+    networks:
+      - serverless-network
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: laravel_php_my_admin
+    restart: unless-stopped
+    ports:
+      - "8086:80"
+    environment:
+      PMA_HOST: database
+      MYSQL_ROOT_PASSWORD: root
+    depends_on:
+      - database
+    networks:
+      - serverless-network
+  redis:
+    image: redis:alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - serverless-network
+
+volumes:
+  v-database:
+
+networks:
+  serverless-network:
+    driver: bridge

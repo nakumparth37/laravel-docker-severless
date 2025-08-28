@@ -1,0 +1,28 @@
+service: laravel-serverless
+
+provider:
+  name: aws
+  region: ap-south-1
+  memorySize: 1024
+  timeout: 30
+
+  ecr:
+    images:
+      laravel:
+        uri: 960631463638.dkr.ecr.ap-south-1.amazonaws.com/lambda-compatible-image1:latest
+
+functions:
+  laravel:
+    image:
+      name: laravel   # 👈 must match the key defined above (provider.ecr.images.laravel)
+    handler: public/index.php
+    events:
+      - httpApi:
+          path: /
+          method: ANY
+      - httpApi:
+          path: /{proxy+}
+          method: ANY
+
+resources:
+  Resources: {}

@@ -1,0 +1,142 @@
+name: Laravel CI/CD (Serverless + ECR + Lambda)
+
+on:
+  push:
+    branches:
+      - main  # default branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+
+    steps:
+      # -----------------------------
+      # 1. Checkout Code
+      # -----------------------------
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # -----------------------------
+      # 2. Set Up PHP
+      # -----------------------------
+      - name: Set Up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, bcmath, pdo, pdo_mysql
+          coverage: none
+
+      # -----------------------------
+      # 3. Set Up Node.js
+      # -----------------------------
+      - name: Set Up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      # -----------------------------
+      # 4. Configure AWS Credentials
+      # -----------------------------
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+
+      # -----------------------------
+      # 5. Create .env file from Secrets
+      # -----------------------------
+      - name: Create .env
+        working-directory: ./app
+        run: |
+          echo "APP_NAME=Serverless-App" >> .env
+          echo "APP_ENV=production" >> .env
+          echo "APP_KEY=${{ secrets.APP_KEY }}" >> .env
+          echo "APP_DEBUG=false" >> .env
+          echo "APP_URL=https://your-app-url.com" >> .env
+
+          echo "LOG_CHANNEL=stderr" >> .env
+          echo "LOG_LEVEL=info" >> .env
+
+          echo "DB_CONNECTION=mysql" >> .env
+          echo "DB_HOST=${{ secrets.DB_HOST }}" >> .env
+          echo "DB_PORT=3306" >> .env
+          echo "DB_DATABASE=${{ secrets.DB_DATABASE }}" >> .env
+          echo "DB_USERNAME=${{ secrets.DB_USERNAME }}" >> .env
+          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
+
+          echo "QUEUE_CONNECTION=sqs" >> .env
+
+          echo "FILESYSTEM_DISK=s3" >> .env
+          echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" >> .env
+          echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> .env
+          echo "AWS_DEFAULT_REGION=${{ secrets.AWS_DEFAULT_REGION }}" >> .env
+          echo "AWS_BUCKET=${{ secrets.AWS_BUCKET }}" >> .env
+
+          echo "SESSION_DRIVER=cookie" >> .env
+          echo "CACHE_DRIVER=file" >> .env
+
+          echo "MAIL_MAILER=smtp" >> .env
+          echo "MAIL_HOST=${{ secrets.MAIL_HOST }}" >> .env
+          echo "MAIL_PORT=${{ secrets.MAIL_PORT }}" >> .env
+          echo "MAIL_USERNAME=${{ secrets.MAIL_USERNAME }}" >> .env
+          echo "MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}" >> .env
+          echo "MAIL_ENCRYPTION=null" >> .env
+          echo "MAIL_FROM_ADDRESS=${{ secrets.MAIL_FROM_ADDRESS }}" >> .env
+          echo "MAIL_FROM_NAME=Serverless-App" >> .env
+
+      # -----------------------------
+      # 6. Install Composer Dependencies
+      # -----------------------------
+      - name: Install Composer Dependencies
+        working-directory: ./app
+        run: composer install --no-dev --optimize-autoloader
+
+      # -----------------------------
+      # 7. Cache Laravel Config, Routes, Views
+      # -----------------------------
+      - name: Cache Laravel Config/Routes/Views
+        working-directory: ./app
+        run: |
+          php artisan config:cache
+          php artisan route:cache
+          php artisan view:cache
+
+      # -----------------------------
+      # 8. Install Serverless CLI
+      # -----------------------------
+      - name: Install Serverless CLI
+        run: npm install -g serverless@4
+
+      # -----------------------------
+      # 9. Build and Push Docker Image to ECR
+      # -----------------------------
+      - name: Authenticate to ECR
+        run: |
+          aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY }}
+
+      - name: Build Docker Image
+        working-directory: ./app
+        run: |
+          IMAGE_NAME=${{ secrets.ECR_REGISTRY }}/laravel-serverless:latest
+          docker build -t $IMAGE_NAME .
+          docker push $IMAGE_NAME
+
+      # -----------------------------
+      # 10. Deploy Lambda using Serverless
+      # -----------------------------
+      - name: Deploy Laravel to Lambda
+        working-directory: ./app
+        env:
+          SERVERLESS_ACCESS_KEY: ${{ secrets.SERVERLESS_ACCESS_KEY }}
+        run: serverless deploy
+
+      # -----------------------------
+      # 11. Run Laravel Migrations via Lambda
+      # -----------------------------
+      - name: Run Migrations
+        working-directory: ./app
+        run: serverless invoke -f artisan -d '{"command": "migrate --force"}'
