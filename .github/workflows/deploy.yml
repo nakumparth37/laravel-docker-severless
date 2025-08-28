@@ -141,7 +141,7 @@ jobs:
       - name: Build Docker Image
         run: |
           IMAGE_NAME=${{ secrets.ECR_REGISTRY }}/laravel-serverless:latest
-          docker build -t $IMAGE_NAME .
+          docker build -t $IMAGE_NAME -f deploy/lambda/Dockerfile .
           docker push $IMAGE_NAME
 
       # -----------------------------
