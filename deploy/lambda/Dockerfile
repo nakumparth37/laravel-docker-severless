@@ -16,10 +16,6 @@ RUN composer install --optimize-autoloader --no-dev --no-interaction --no-progre
 # Fix permissions for Laravel storage and cache
 RUN chmod -R 777 storage bootstrap/cache
 
-# Copy optional scripts (build/deploy tasks)
-COPY scripts /var/task/scripts
-RUN chmod +x /var/task/scripts/*.sh || true
-
 # Set environment variables
 ENV APP_ENV=production
 ENV APP_DEBUG=false
