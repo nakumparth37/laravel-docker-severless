@@ -138,11 +138,10 @@ jobs:
         run: |
           aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY }}
 
-      - name: Build and Push Docker Image
-        working-directory: ./deploy/lambda
+      - name: Build Docker Image
         run: |
-          IMAGE_NAME=${{ secrets.ECR_REGISTRY }}:latest
-          docker build -t $IMAGE_NAME .
+          IMAGE_NAME=${{ secrets.ECR_REGISTRY }}/lambda-compatible-image1:latest
+          docker build -t $IMAGE_NAME -f Dockerfile deploy/lambda
           docker push $IMAGE_NAME
 
       # -----------------------------
