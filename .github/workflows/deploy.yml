@@ -53,7 +53,6 @@ jobs:
       # 5. Create .env file from Secrets
       # -----------------------------
       - name: Create .env
-        working-directory: ./app
         run: |
           echo "APP_NAME=Serverless-App" >> .env
           echo "APP_ENV=production" >> .env
@@ -115,14 +114,12 @@ jobs:
       # 6. Install Composer Dependencies
       # -----------------------------
       - name: Install Composer Dependencies
-        working-directory: ./app
         run: composer install --no-dev --optimize-autoloader
 
       # -----------------------------
       # 7. Cache Laravel Config, Routes, Views
       # -----------------------------
       - name: Cache Laravel Config/Routes/Views
-        working-directory: ./app
         run: |
           php artisan config:cache
           php artisan route:cache
@@ -142,7 +139,6 @@ jobs:
           aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY }}
 
       - name: Build Docker Image
-        working-directory: ./app
         run: |
           IMAGE_NAME=${{ secrets.ECR_REGISTRY }}/laravel-serverless:latest
           docker build -t $IMAGE_NAME .
@@ -152,7 +148,6 @@ jobs:
       # 10. Deploy Lambda using Serverless
       # -----------------------------
       - name: Deploy Laravel to Lambda
-        working-directory: ./app
         env:
           SERVERLESS_ACCESS_KEY: ${{ secrets.SERVERLESS_ACCESS_KEY }}
         run: serverless deploy
@@ -161,6 +156,5 @@ jobs:
       # 11. Run Laravel Migrations via Lambda
       # -----------------------------
       - name: Run Migrations
-        working-directory: ./app
         run: |
           serverless invoke -f artisan -d '{"command": "migrate --force"}'
