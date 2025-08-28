@@ -1,4 +1,4 @@
-name: Laravel CI/CD (Serverless + ECR + Lambda)
+name: Laravel-serverless CI/CD (Serverless + ECR + Lambda)
 
 on:
   push:
