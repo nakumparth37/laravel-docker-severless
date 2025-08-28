@@ -46,6 +46,9 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
 
+      - name: Test AWS CLI
+        run: aws sts get-caller-identity
+
       # -----------------------------
       # 5. Create .env file from Secrets
       # -----------------------------
