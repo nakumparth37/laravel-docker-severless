@@ -23,9 +23,14 @@ functions:
           path: /{proxy+}
           method: ANY
 
+
   artisan:
-    image:
-      name: laravel
+    handler: artisan
+    runtime: provided.al2
+    layers:
+      - ${bref:layer.php-83}       # CLI runtime (not fpm!)
+      - ${bref:layer.console}      # Needed to run Artisan commands
+
 
 resources:
   Resources: {}
