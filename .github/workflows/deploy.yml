@@ -58,8 +58,8 @@ jobs:
           echo "APP_ENV=production" >> .env
           echo "APP_KEY=${{ secrets.APP_KEY }}" >> .env
           echo "APP_DEBUG=true" >> .env
-          echo "APP_URL=https://7yrt6da7d7.execute-api.ap-south-1.amazonaws.com" >> .env
-          echo "BASE_URL=https://7yrt6da7d7.execute-api.ap-south-1.amazonaws.com/" >> .env
+          echo "APP_URL=https://w4a9fjikjh.execute-api.ap-south-1.amazonaws.com" >> .env
+          echo "BASE_URL=https://w4a9fjikjh.execute-api.ap-south-1.amazonaws.com/" >> .env
 
           echo "LOG_CHANNEL=stderr" >> .env
           echo "LOG_LEVEL=info" >> .env
@@ -97,11 +97,11 @@ jobs:
 
           echo "GITHUB_CLIENT_ID=${{ secrets.OAUTH_GITHUB_CLIENT_ID }}" >> .env
           echo "GITHUB_CLIENT_SECRET=${{ secrets.OAUTH_GITHUB_CLIENT_SECRET }}" >> .env
-          echo "OAUTH_REDIRECT_URL=https://7yrt6da7d7.execute-api.ap-south-1.amazonaws.com/login/github/callback" >> .env
+          echo "OAUTH_REDIRECT_URL=https://w4a9fjikjh.execute-api.ap-south-1.amazonaws.com/login/github/callback" >> .env
 
           echo "GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}" >> .env
           echo "GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}" >> .env
-          echo "GOOGLE_REDIRECT=https://7yrt6da7d7.execute-api.ap-south-1.amazonaws.com/login/google/callback" >> .env
+          echo "GOOGLE_REDIRECT=https://w4a9fjikjh.execute-api.ap-south-1.amazonaws.com/login/google/callback" >> .env
 
           echo "PAYPAL_MODE=sandbox" >> .env
           echo "PAYPAL_SANDBOX_CLIENT_ID=${{ secrets.PAYPAL_SANDBOX_CLIENT_ID }}" >> .env
