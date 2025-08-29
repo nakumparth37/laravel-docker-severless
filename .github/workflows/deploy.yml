@@ -141,14 +141,13 @@ jobs:
       - name: Build Docker Image
         run: |
           IMAGE_NAME=${{ secrets.ECR_REGISTRY }}/lambda-compatible-image1:latest
-          docker build -t $IMAGE_NAME -f deploy/lambda/Dockerfile .
+          docker build -t $IMAGE_NAME .
           docker push $IMAGE_NAME
 
       # -----------------------------
       # 10. Deploy Lambda using Serverless
       # -----------------------------
       - name: Deploy Laravel to Lambda
-        working-directory: ./deploy/lambda
         env:
           SERVERLESS_ACCESS_KEY: ${{ secrets.SERVERLESS_ACCESS_KEY }}
         run: serverless deploy
