@@ -23,5 +23,9 @@ functions:
           path: /{proxy+}
           method: ANY
 
+  artisan:
+    image:
+      name: laravel
+
 resources:
   Resources: {}
