@@ -14,8 +14,7 @@ provider:
 functions:
   laravel:
     image:
-      name: laravel   # 👈 must match the key defined above (provider.ecr.images.laravel)
-    handler: public/index.php
+      name: laravel
     events:
       - httpApi:
           path: /
