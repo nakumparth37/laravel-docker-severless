@@ -7,19 +7,16 @@ RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local
 # Set working directory
 WORKDIR /var/task
 
-# Copy composer files first (cache dependencies)
-COPY composer.json composer.lock ./
+# Copy everything first (so artisan exists before composer install)
+COPY . .
 
 # Install dependencies (production only)
 RUN composer install --optimize-autoloader --no-dev --no-interaction --no-progress
 
-# Copy rest of Laravel project
-COPY . .
-
 # Fix permissions
 RUN chmod -R 777 storage bootstrap/cache
 
-# Environment variables (Docker defaults, will be overridden by Lambda)
+# Environment variables
 ENV APP_ENV=production
 ENV APP_DEBUG=false
 
