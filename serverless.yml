@@ -30,3 +30,4 @@ functions:
       name: laravel
       command: ["php", "artisan"]
     timeout: 900
+    memorySize: 1024
