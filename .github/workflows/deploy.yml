@@ -173,9 +173,9 @@ jobs:
           echo "Updated .env with API Gateway URLs:"
           grep "URL" .env
 
-      # -----------------------------
+      # ---------------------------------------
       # 13. Run Laravel Migrations via Lambda
-      # -----------------------------
+      # ---------------------------------------
       - name: Run Migrations
         env:
           SERVERLESS_ACCESS_KEY: ${{ secrets.SERVERLESS_ACCESS_KEY }}
