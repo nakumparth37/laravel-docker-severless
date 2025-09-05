@@ -181,6 +181,7 @@ jobs:
       - name: Run DB Migrations
         run: |
           docker run --rm \
+            --network host \
             --env-file .env \
             --entrypoint "" \
             ${{ secrets.ECR_REGISTRY }}/lambda-compatible-image1:latest \
