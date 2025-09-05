@@ -154,6 +154,8 @@ jobs:
       # -----------------------------
       - name: Fetch API Gateway URL
         id: gateway
+        env:
+          SERVERLESS_ACCESS_KEY: ${{ secrets.SERVERLESS_ACCESS_KEY }}
         run: |
           url=$(sls info --stage prod --verbose | grep "HttpApiUrl" | awk '{print $2}')
           echo "APP_URL=$url" >> $GITHUB_ENV
