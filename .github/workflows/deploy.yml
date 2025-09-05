@@ -50,16 +50,15 @@ jobs:
         run: aws sts get-caller-identity
 
       # -----------------------------
-      # 5. Create .env file from Secrets
+      # 5. Create Base .env file (without URL values)
       # -----------------------------
-      - name: Create .env
+      - name: Create base .env
         run: |
           echo "APP_NAME=Serverless-App" >> .env
           echo "APP_ENV=production" >> .env
           echo "APP_KEY=${{ secrets.APP_KEY }}" >> .env
           echo "APP_DEBUG=true" >> .env
-          echo "APP_URL=https://w4a9fjikjh.execute-api.ap-south-1.amazonaws.com" >> .env
-          echo "BASE_URL=https://w4a9fjikjh.execute-api.ap-south-1.amazonaws.com/" >> .env
+          # URL values will be injected later
 
           echo "LOG_CHANNEL=stderr" >> .env
           echo "LOG_LEVEL=info" >> .env
@@ -97,11 +96,9 @@ jobs:
 
           echo "GITHUB_CLIENT_ID=${{ secrets.OAUTH_GITHUB_CLIENT_ID }}" >> .env
           echo "GITHUB_CLIENT_SECRET=${{ secrets.OAUTH_GITHUB_CLIENT_SECRET }}" >> .env
-          echo "OAUTH_REDIRECT_URL=https://w4a9fjikjh.execute-api.ap-south-1.amazonaws.com/login/github/callback" >> .env
 
           echo "GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}" >> .env
           echo "GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}" >> .env
-          echo "GOOGLE_REDIRECT=https://w4a9fjikjh.execute-api.ap-south-1.amazonaws.com/login/google/callback" >> .env
 
           echo "PAYPAL_MODE=sandbox" >> .env
           echo "PAYPAL_SANDBOX_CLIENT_ID=${{ secrets.PAYPAL_SANDBOX_CLIENT_ID }}" >> .env
@@ -153,7 +150,31 @@ jobs:
         run: serverless deploy
 
       # -----------------------------
-      # 11. Run Laravel Migrations via Lambda
+      # 11. Fetch API Gateway URL from Serverless output
+      # -----------------------------
+      - name: Fetch API Gateway URL
+        id: gateway
+        run: |
+          url=$(sls info --stage prod --verbose | grep "HttpApiUrl" | awk '{print $2}')
+          echo "APP_URL=$url" >> $GITHUB_ENV
+          echo "BASE_URL=${url}/" >> $GITHUB_ENV
+          echo "OAUTH_REDIRECT_URL=${url}/login/github/callback" >> $GITHUB_ENV
+          echo "GOOGLE_REDIRECT=${url}/login/google/callback" >> $GITHUB_ENV
+
+      # -----------------------------
+      # 12. Update .env file with dynamic URLs
+      # -----------------------------
+      - name: Update .env file with dynamic URLs
+        run: |
+          sed -i "s|^APP_URL=.*|APP_URL=${{ env.APP_URL }}|" .env || echo "APP_URL=${{ env.APP_URL }}" >> .env
+          sed -i "s|^BASE_URL=.*|BASE_URL=${{ env.BASE_URL }}|" .env || echo "BASE_URL=${{ env.BASE_URL }}" >> .env
+          sed -i "s|^OAUTH_REDIRECT_URL=.*|OAUTH_REDIRECT_URL=${{ env.OAUTH_REDIRECT_URL }}|" .env || echo "OAUTH_REDIRECT_URL=${{ env.OAUTH_REDIRECT_URL }}" >> .env
+          sed -i "s|^GOOGLE_REDIRECT=.*|GOOGLE_REDIRECT=${{ env.GOOGLE_REDIRECT }}|" .env || echo "GOOGLE_REDIRECT=${{ env.GOOGLE_REDIRECT }}" >> .env
+          echo "Updated .env with API Gateway URLs:"
+          grep "URL" .env
+
+      # -----------------------------
+      # 13. Run Laravel Migrations via Lambda
       # -----------------------------
       - name: Run Migrations
         env:

@@ -11,11 +11,8 @@ provider:
       laravel:
         uri: 960631463638.dkr.ecr.ap-south-1.amazonaws.com/lambda-compatible-image1:latest
 
-
-plugins:
-  - ./vendor/bref/bref
-
 functions:
+  # Main Laravel web handler
   laravel:
     image:
       name: laravel
@@ -27,13 +24,8 @@ functions:
           path: /{proxy+}
           method: ANY
 
-
+  # Artisan command runner (uses same image)
   artisan:
-    handler: artisan
-    runtime: provided.al2
-    layers:
-      - ${bref:layer.php-83}
-      - ${bref:layer.console}
-
-resources:
-  Resources: {}
+    image:
+      name: laravel
+      command: ["php", "artisan"]
