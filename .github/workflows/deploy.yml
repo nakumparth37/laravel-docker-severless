@@ -64,7 +64,7 @@ jobs:
           echo "LOG_LEVEL=info" >> .env
 
           echo "DB_CONNECTION=mysql" >> .env
-          echo "DB_HOST=laravel-db.cx4eimm4y97f.ap-south-1.rds.amazonaws.com" >> .env
+          echo "DB_HOST=${{ secrets.DB_HOST }}" >> .env
           echo "DB_PORT=3306" >> .env
           echo "DB_DATABASE=laravel_db" >> .env
           echo "DB_USERNAME=admin" >> .env
@@ -175,10 +175,23 @@ jobs:
           echo "Updated .env with API Gateway URLs:"
           grep "URL" .env
 
-      # ---------------------------------------
-      # 13. Run Laravel Migrations via Lambda
-      # ---------------------------------------
+      # -----------------------------
+      # 13a. Check if migration files changed
+      # -----------------------------
+      - name: Check if migration files changed
+        id: check_migrations
+        run: |
+          if git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -q '^database/migrations/'; then
+            echo "migrations_changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "migrations_changed=false" >> $GITHUB_OUTPUT
+          fi
+
+      # -----------------------------
+      # 13b. Run Laravel Migrations via Lambda (only if changed)
+      # -----------------------------
       - name: Run DB Migrations
+        if: steps.check_migrations.outputs.migrations_changed == 'true'
         run: |
           docker run --rm \
             --network host \

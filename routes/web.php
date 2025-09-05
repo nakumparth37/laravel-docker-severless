@@ -19,6 +19,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\NotificationController;
 use App\Models\Product;
 use Illuminate\Support\Facades\Log;
+use App\Jobs\RunSeedersJob;
 
 /*
 |--------------------------------------------------------------------------
@@ -231,4 +232,25 @@ Route::get('/test/queueMonitor', function () {
 Route::get('/clear-cache', function () {
     Log::info('Clear cache route hit.');
     return response()->json(['status' => 'ok']);
+});
+
+
+Route::get('/run-seeders', function ($token) {
+    // Protect with secret token
+    if ($token !== env('SEEDER_SECRET')) {
+        abort(403, 'Unauthorized');
+    }
+
+    // Seeders in specific order
+    $seeders = [
+        'RolesTableSeeder',
+        'UsersTableSeeder',
+        'CategorySeeder',
+        'SubcategorySeeder',
+        'ProductSeeder',
+    ];
+
+    RunSeedersJob::dispatch($seeders);
+
+    return 'Seeders dispatched successfully!';
 });
