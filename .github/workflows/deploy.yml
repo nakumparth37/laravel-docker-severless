@@ -64,7 +64,7 @@ jobs:
           echo "LOG_LEVEL=info" >> .env
 
           echo "DB_CONNECTION=mysql" >> .env
-          echo "DB_HOST=laravel-dev-db.cvu4m8s04c94.ap-south-1.rds.amazonaws.com" >> .env
+          echo "DB_HOST=laravel-db.cx4eimm4y97f.ap-south-1.rds.amazonaws.com" >> .env
           echo "DB_PORT=3306" >> .env
           echo "DB_DATABASE=laravel_db" >> .env
           echo "DB_USERNAME=admin" >> .env
