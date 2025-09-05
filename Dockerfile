@@ -17,7 +17,7 @@ RUN composer install --optimize-autoloader --no-dev --no-interaction --no-progre
 RUN chmod -R 777 storage bootstrap/cache
 
 # Environment variables
-ENV APP_ENV=production
+ENV APP_ENV=local
 ENV APP_DEBUG=false
 
 # Lambda handler (for HTTP via API Gateway)

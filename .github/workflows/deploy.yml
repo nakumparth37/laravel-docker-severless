@@ -55,7 +55,7 @@ jobs:
       - name: Create base .env
         run: |
           echo "APP_NAME=Serverless-App" >> .env
-          echo "APP_ENV=production" >> .env
+          echo "APP_ENV=local" >> .env
           echo "APP_KEY=${{ secrets.APP_KEY }}" >> .env
           echo "APP_DEBUG=true" >> .env
           # URL values will be injected later
