@@ -182,5 +182,6 @@ jobs:
         run: |
           docker run --rm \
             --env-file .env \
+            --entrypoint "" \
             ${{ secrets.ECR_REGISTRY }}/lambda-compatible-image1:latest \
             php artisan migrate --force
