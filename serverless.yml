@@ -11,6 +11,23 @@ provider:
       laravel:
         uri: 136003615631.dkr.ecr.ap-south-1.amazonaws.com/lambda-compatible-image1:latest
 
+  environment:
+    APP_NAME: Serverless-App
+    APP_ENV: local
+    APP_KEY: ${env:APP_KEY}
+    APP_DEBUG: true
+
+    DB_CONNECTION: mysql
+    DB_HOST: laravel-db.cx4eimm4y97f.ap-south-1.rds.amazonaws.com
+    DB_PORT: 3306
+    DB_DATABASE: laravel_db
+    DB_USERNAME: admin
+    DB_PASSWORD: ${env:DB_PASSWORD}
+
+    QUEUE_CONNECTION: sqs
+    SQS_QUEUE: laravel-queue
+    SQS_PREFIX: https://sqs.ap-south-1.amazonaws.com/870968578789
+
 functions:
   # Main Laravel web handler
   laravel:
@@ -31,3 +48,13 @@ functions:
       command: ["php", "artisan"]
     timeout: 900
     memorySize: 1024
+
+  queueWorker:
+    image:
+      name: laravel
+      command: ["php", "artisan", "queue:work", "sqs", "--once", "--tries=3", "--timeout=900"]
+    timeout: 900
+    memorySize: 1024
+    events:
+      - sqs:
+          arn: arn:aws:sqs:ap-south-1:870968578789:laravel-queue
