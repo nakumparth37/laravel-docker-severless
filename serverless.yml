@@ -45,14 +45,14 @@ functions:
   artisan:
     image:
       name: laravel
-      command: ["vendor/bin/bref", "artisan"]
+      command: ["php", "artisan"]
     timeout: 900
     memorySize: 1024
 
   queueWorker:
     image:
       name: laravel
-      command: ["vendor/bin/bref", "artisan", "queue:work", "sqs", "--once", "--tries=3", "--timeout=900"]
+      command: ["php", "artisan", "queue:work", "sqs", "--once", "--tries=3", "--timeout=900"]
     timeout: 900
     memorySize: 1024
     events:
