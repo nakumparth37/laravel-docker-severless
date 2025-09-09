@@ -52,6 +52,7 @@ functions:
   queueWorker:
     image:
       name: laravel
+      handler: public/index.php
       command: ["php", "artisan", "queue:work", "sqs", "--once", "--tries=3", "--timeout=900"]
     timeout: 900
     memorySize: 1024
