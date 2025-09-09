@@ -9,7 +9,7 @@ provider:
   ecr:
     images:
       laravel:
-        uri: 960631463638.dkr.ecr.ap-south-1.amazonaws.com/lambda-compatible-image1:latest
+        uri: 136003615631.dkr.ecr.ap-south-1.amazonaws.com/lambda-compatible-image1:latest
 
 functions:
   laravel:

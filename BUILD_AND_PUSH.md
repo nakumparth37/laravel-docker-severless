@@ -18,7 +18,7 @@ Since the Dockerfile is inside deploy/lambda/, run:
 ```bash
 cd /home/parth.nakum/AWS-compatible
 
-docker build -t 960631463638.dkr.ecr.ap-south-1.amazonaws.com/lambda-compatible-image1:latest -f deploy/lambda/Dockerfile .
+docker build -t 136003615631.dkr.ecr.ap-south-1.amazonaws.com/lambda-compatible-image1:latest -f deploy/lambda/Dockerfile .
 ```
 
 ## 3. Verify Image Built Locally
@@ -32,5 +32,5 @@ docker images | grep lambda-compatible-image1
 Push the Docker image to your AWS ECR repository:
 
 ```bash
-docker push 960631463638.dkr.ecr.ap-south-1.amazonaws.com/lambda-compatible-image1:latest
+docker push 136003615631.dkr.ecr.ap-south-1.amazonaws.com/lambda-compatible-image1:latest
 ```

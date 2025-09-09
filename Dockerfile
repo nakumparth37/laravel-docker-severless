@@ -16,9 +16,14 @@ RUN composer install --optimize-autoloader --no-dev --no-interaction --no-progre
 # Fix permissions
 RUN chmod -R 777 storage bootstrap/cache
 
+# Clear Laravel caches
+RUN php artisan config:clear \
+    && php artisan route:clear \
+    && php artisan view:clear
+
 # Environment variables
 ENV APP_ENV=local
-ENV APP_DEBUG=false
+ENV APP_DEBUG=true
 
 # Lambda handler (for HTTP via API Gateway)
 CMD ["public/index.php"]
