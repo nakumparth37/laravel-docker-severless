@@ -1,14 +1,32 @@
+# --------------------------
+# Stage 1 - Build vendor
+# --------------------------
+FROM composer:2 AS vendor
+
+WORKDIR /app
+
+# Copy composer files first (to leverage Docker cache)
+COPY composer.json composer.lock ./
+
+RUN composer install --optimize-autoloader --no-dev --no-interaction --no-progress
+
+# Copy the rest of the app
+COPY . .
+
+# --------------------------
+# Stage 2 - Lambda Runtime
+# --------------------------
 FROM bref/php-83-console:latest
 
 WORKDIR /var/task
 
-COPY . .
+# Copy app files
+COPY --from=vendor /app ./
 
-RUN composer install --optimize-autoloader --no-dev --no-interaction --no-progress
-
+# Ensure storage and cache dirs are writable
 RUN chmod -R 777 storage bootstrap/cache
 
 ENV APP_ENV=local
 ENV APP_DEBUG=true
 
-CMD ["artisan"]
+CMD ["php", "artisan"]
