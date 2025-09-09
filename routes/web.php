@@ -235,7 +235,7 @@ Route::get('/clear-cache', function () {
 });
 
 
-Route::get('/run-seeders', function ($token) {
+Route::get('/run-seeders/{token}', function ($token) {
     // Protect with secret token
     if ($token !== env('SEEDER_SECRET')) {
         abort(403, 'Unauthorized');

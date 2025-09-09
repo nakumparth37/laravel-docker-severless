@@ -108,6 +108,7 @@ jobs:
 
           echo "PASSPORT_PERSONAL_ACCESS_CLIENT_ID=6" >> .env
           echo "PASSPORT_PERSONAL_ACCESS_CLIENT_SECRET=${{ secrets.PASSPORT_PERSONAL_ACCESS_CLIENT_SECRET }}" >> .env
+          echo "SEEDER_SECRET=${{ secrets.SEEDER_SECRET }}" >> .env
 
       # -----------------------------
       # 6. Install Composer Dependencies
