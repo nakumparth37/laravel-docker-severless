@@ -26,4 +26,4 @@ ENV APP_ENV=local
 ENV APP_DEBUG=true
 
 # Lambda handler (for HTTP via API Gateway)
-CMD ["public/index.php"]
+# CMD ["public/index.php"]
