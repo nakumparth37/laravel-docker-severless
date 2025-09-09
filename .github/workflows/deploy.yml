@@ -178,6 +178,10 @@ jobs:
       # -----------------------------
       # 13a. Check if migration files changed
       # -----------------------------
+      # Ensure full history (needed for git diff)
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Check if migration files changed
         id: check_migrations
         run: |

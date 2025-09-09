@@ -8,7 +8,7 @@ This guide explains how to build the Laravel-compatible Docker image and push it
 Run the following command to authenticate your Docker client with your AWS Elastic Container Registry (ECR):
 
 ```bash
-aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 960631463638.dkr.ecr.ap-south-1.amazonaws.com
+aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 136003615631.dkr.ecr.ap-south-1.amazonaws.com
 ```
 
 
