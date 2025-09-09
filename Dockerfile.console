@@ -6,13 +6,13 @@ WORKDIR /app
 # Copy only composer files to leverage Docker cache
 COPY composer.json composer.lock ./
 
-# Install PHP dependencies (ignore pcntl because Lambda doesn’t support it)
+# Install dependencies without scripts (artisan not available yet)
 RUN composer install \
     --optimize-autoloader \
     --no-dev \
     --no-interaction \
     --no-progress \
-    --ignore-platform-req=ext-pcntl\
+    --ignore-platform-req=ext-pcntl \
     --no-scripts
 
 # Stage 2: Final Lambda console image
@@ -20,23 +20,19 @@ FROM bref/php-83-console:2
 
 WORKDIR /var/task
 
-# Copy vendor from builder
+# Copy vendor from Stage 1
 COPY --from=vendor /app/vendor ./vendor
 
-# Copy the rest of the application
+# Copy the rest of the application (artisan will now be here)
 COPY . .
 
 # Fix permissions
 RUN chmod -R 777 storage bootstrap/cache
 
-# Run scripts now that artisan is available
-RUN composer dump-autoload --optimize --no-dev --classmap-authoritative \
- && php artisan package:discover --ansi
+# Now run Laravel scripts (artisan is available here)
+RUN php artisan package:discover --ansi || true
 
-
-# Environment variables (adjust as needed)
 ENV APP_ENV=local
 ENV APP_DEBUG=true
 
-# Default command is artisan
 CMD ["artisan"]
