@@ -8,8 +8,12 @@ provider:
 
   ecr:
     images:
-      laravel:
-        uri: 136003615631.dkr.ecr.ap-south-1.amazonaws.com/lambda-compatible-image1:latest
+      lambda-fpm:
+        uri: 136003615631.dkr.ecr.ap-south-1.amazonaws.com/lambda-fpm:latest
+      lambda-console:
+        uri: 136003615631.dkr.ecr.ap-south-1.amazonaws.com/lambda-console:latest
+
+
 
   environment:
     APP_NAME: Serverless-App
