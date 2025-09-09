@@ -1,0 +1,14 @@
+FROM bref/php-83:console
+
+WORKDIR /var/task
+
+COPY . .
+
+RUN composer install --optimize-autoloader --no-dev --no-interaction --no-progress
+
+RUN chmod -R 777 storage bootstrap/cache
+
+ENV APP_ENV=local
+ENV APP_DEBUG=true
+
+CMD ["artisan"]

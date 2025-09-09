@@ -143,10 +143,16 @@ jobs:
         run: |
           aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY }}
 
-      - name: Build Docker Image
+      - name: Build & Push FPM Image
         run: |
-          IMAGE_NAME=${{ secrets.ECR_REGISTRY }}/lambda-compatible-image1:latest
-          docker build -t $IMAGE_NAME .
+          IMAGE_NAME=${{ secrets.ECR_REGISTRY }}/lambda-fpm:latest
+          docker build -f Dockerfile.fpm -t $IMAGE_NAME .
+          docker push $IMAGE_NAME
+
+      - name: Build & Push Console Image
+        run: |
+          IMAGE_NAME=${{ secrets.ECR_REGISTRY }}/lambda-console:latest
+          docker build -f Dockerfile.console -t $IMAGE_NAME .
           docker push $IMAGE_NAME
 
       # -----------------------------
@@ -205,5 +211,5 @@ jobs:
             --network host \
             --env-file .env \
             --entrypoint "" \
-            ${{ secrets.ECR_REGISTRY }}/lambda-compatible-image1:latest \
+            ${{ secrets.ECR_REGISTRY }}/lambda-console:latest \
             php artisan migrate --force

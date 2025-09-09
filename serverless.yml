@@ -32,7 +32,7 @@ functions:
   # Main Laravel web handler
   laravel:
     image:
-      name: laravel
+      name: lambda-fpm
     events:
       - httpApi:
           path: /
@@ -44,15 +44,15 @@ functions:
   # Artisan command runner (uses same image)
   artisan:
     image:
-      name: laravel
-      command: ["php", "artisan"]
+      name: lambda-console
+      command: ["artisan"]
     timeout: 900
     memorySize: 1024
 
   queueWorker:
     image:
-      name: laravel
-      command: ["php", "artisan", "queue:work", "sqs", "--once", "--tries=3", "--timeout=900"]
+      name: lambda-console
+      command: ["artisan", "queue:work", "sqs", "--once", "--tries=3", "--timeout=900"]
     timeout: 900
     memorySize: 1024
     events:
