@@ -26,7 +26,7 @@ provider:
 
     QUEUE_CONNECTION: sqs
     SQS_QUEUE: laravel-queue
-    SQS_PREFIX: https://sqs.ap-south-1.amazonaws.com/870968578789
+    SQS_PREFIX: https://sqs.ap-south-1.amazonaws.com/136003615631
 
 functions:
   # Main Laravel web handler
@@ -57,4 +57,4 @@ functions:
     memorySize: 1024
     events:
       - sqs:
-          arn: arn:aws:sqs:ap-south-1:870968578789:laravel-queue
+          arn: arn:aws:sqs:ap-south-1:136003615631:laravel-queue
