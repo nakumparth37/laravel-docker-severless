@@ -12,7 +12,8 @@ RUN composer install \
     --no-dev \
     --no-interaction \
     --no-progress \
-    --ignore-platform-req=ext-pcntl
+    --ignore-platform-req=ext-pcntl\
+    --no-scripts
 
 # Stage 2: Final Lambda console image
 FROM bref/php-83-console:2
@@ -27,6 +28,11 @@ COPY . .
 
 # Fix permissions
 RUN chmod -R 777 storage bootstrap/cache
+
+# Run scripts now that artisan is available
+RUN composer dump-autoload --optimize --no-dev --classmap-authoritative \
+ && php artisan package:discover --ansi
+
 
 # Environment variables (adjust as needed)
 ENV APP_ENV=local
