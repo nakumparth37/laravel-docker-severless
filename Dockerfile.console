@@ -1,4 +1,4 @@
-FROM bref/php-83:console
+FROM bref/php-83-console:latest
 
 WORKDIR /var/task
 
