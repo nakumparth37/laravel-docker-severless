@@ -18,7 +18,7 @@ provider:
     APP_DEBUG: true
 
     DB_CONNECTION: mysql
-    DB_HOST: laravel-db.cx4eimm4y97f.ap-south-1.rds.amazonaws.com
+    DB_HOST: ${env:DB_HOST}
     DB_PORT: 3306
     DB_DATABASE: laravel_db
     DB_USERNAME: admin
