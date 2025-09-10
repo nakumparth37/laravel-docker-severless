@@ -10,10 +10,6 @@ provider:
     images:
       lambda-fpm:
         uri: 136003615631.dkr.ecr.ap-south-1.amazonaws.com/lambda-fpm:latest
-      lambda-console:
-        uri: 136003615631.dkr.ecr.ap-south-1.amazonaws.com/lambda-console:latest
-
-
 
   environment:
     APP_NAME: Serverless-App
@@ -45,18 +41,10 @@ functions:
           path: /{proxy+}
           method: ANY
 
-  # Artisan command runner (uses same image)
-  artisan:
-    image:
-      name: lambda-console
-      command: ["artisan"]
-    timeout: 900
-    memorySize: 1024
-
+  # Queue worker using Bref's built-in handler
   queueWorker:
-    image:
-      name: lambda-console
-      command: ["artisan", "queue:work", "sqs", "--once", "--tries=3", "--timeout=900"]
+    handler: Bref\LaravelBridge\Queue\QueueHandler
+    runtime: php-83
     timeout: 900
     memorySize: 1024
     events:
