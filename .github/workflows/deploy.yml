@@ -211,5 +211,5 @@ jobs:
             --network host \
             --env-file .env \
             --entrypoint "" \
-            ${{ secrets.ECR_REGISTRY }}/lambda-console:latest \
+            ${{ secrets.ECR_REGISTRY }}/lambda-fpm:latest \
             php artisan migrate --force
