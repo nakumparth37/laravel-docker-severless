@@ -119,6 +119,7 @@ jobs:
           echo "PASSPORT_PERSONAL_ACCESS_CLIENT_ID=6" >> .env
           echo "PASSPORT_PERSONAL_ACCESS_CLIENT_SECRET=${{ secrets.PASSPORT_PERSONAL_ACCESS_CLIENT_SECRET }}" >> .env
           echo "SEEDER_SECRET=${{ secrets.SEEDER_SECRET }}" >> .env
+          echo "ASSET_URL=${{ secrets.ASSET_URL }}" >> .env
 
       # -----------------------------
       # 6. Install Composer Dependencies
@@ -218,3 +219,16 @@ jobs:
             --entrypoint "" \
             ${{ secrets.ECR_REGISTRY }}/lambda-fpm:latest \
             php artisan migrate --force
+
+      # -----------------------------
+      # 14. Upload all the public data in to S3
+      # -----------------------------
+      - name: Upload assets to S3
+        env:
+          SERVERLESS_ACCESS_KEY: ${{ secrets.SERVERLESS_ACCESS_KEY }}
+        run: |
+          aws s3 sync public/ s3://laravel-app-assets-prod/ \
+            --exclude "*" \
+            --include "js/*" \
+            --include "css/*" \
+            --delete
