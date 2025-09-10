@@ -30,6 +30,7 @@ provider:
     QUEUE_CONNECTION: sqs
     SQS_QUEUE: laravel-queue
     SQS_PREFIX: https://sqs.ap-south-1.amazonaws.com/136003615631
+    SEEDER_SECRET: ${evn:SEEDER_SECRET}
 
 functions:
   # Main Laravel web handler
