@@ -33,6 +33,7 @@ functions:
   laravel:
     image:
       name: lambda-fpm
+    timeout: 29
     events:
       - httpApi:
           path: /
