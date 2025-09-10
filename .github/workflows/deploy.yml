@@ -43,6 +43,11 @@ jobs:
         with:
           node-version: '18'
 
+      - name: Build frontend assets
+        run: |
+          npm ci
+          npm run prod
+
       # -----------------------------
       # 4. Configure AWS Credentials
       # -----------------------------
