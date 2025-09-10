@@ -1,5 +1,8 @@
 service: laravel-serverless
 
+plugins:
+  - ./vendor/bref/bref
+
 provider:
   name: aws
   region: ap-south-1
@@ -13,9 +16,9 @@ provider:
 
   environment:
     APP_NAME: Serverless-App
-    APP_ENV: local
+    APP_ENV: production
     APP_KEY: ${env:APP_KEY}
-    APP_DEBUG: true
+    APP_DEBUG: false
 
     DB_CONNECTION: mysql
     DB_HOST: ${env:DB_HOST}
@@ -42,12 +45,25 @@ functions:
           path: /{proxy+}
           method: ANY
 
-  # Queue worker using Bref's built-in handler
-  queueWorker:
+  # Queue worker - Fixed runtime and added Bref layer
+  queueProcessor:
     handler: Bref\LaravelBridge\Queue\QueueHandler
     runtime: provided.al2
+    layers:
+      - ${bref:layer.php-83}
     timeout: 900
     memorySize: 1024
     events:
       - sqs:
           arn: arn:aws:sqs:ap-south-1:136003615631:laravel-queue
+
+  # Scheduled tasks - Fixed runtime and added Bref layer
+  # scheduler:
+  #   handler: Bref\LaravelBridge\Main\ScheduleHandler
+  #   runtime: provided.al2
+  #   layers:
+  #     - ${bref:layer.php-83}
+  #   timeout: 120
+  #   memorySize: 1024
+  #   events:
+  #     - schedule: rate(5 minutes)
