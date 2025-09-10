@@ -44,7 +44,7 @@ functions:
   # Queue worker using Bref's built-in handler
   queueWorker:
     handler: Bref\LaravelBridge\Queue\QueueHandler
-    runtime: php-83
+    runtime: provided.al2
     timeout: 900
     memorySize: 1024
     events:
