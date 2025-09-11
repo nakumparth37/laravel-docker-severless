@@ -128,22 +128,13 @@ jobs:
         run: composer install --optimize-autoloader
 
       # -----------------------------
-      # 7. Cache Laravel Config, Routes, Views
-      # -----------------------------
-      - name: Cache Laravel Config/Routes/Views
-        run: |
-          php artisan config:cache
-          php artisan route:cache
-          php artisan view:cache
-
-      # -----------------------------
-      # 8. Install Serverless CLI
+      # 7. Install Serverless CLI
       # -----------------------------
       - name: Install Serverless CLI
         run: npm install -g serverless@4
 
       # -----------------------------
-      # 9. Build and Push Docker Image to ECR
+      # 8. Build and Push Docker Image to ECR
       # -----------------------------
       - name: Authenticate to ECR
         run: |
@@ -162,7 +153,7 @@ jobs:
           docker push $IMAGE_NAME
 
       # -----------------------------
-      # 10. Deploy Lambda using Serverless
+      # 9. Deploy Lambda using Serverless
       # -----------------------------
       - name: Deploy Laravel to Lambda
         env:
@@ -170,7 +161,7 @@ jobs:
         run: serverless deploy
 
       # -----------------------------
-      # 11. Fetch API Gateway URL safely
+      # 10. Fetch API Gateway URL safely
       # -----------------------------
       - name: Fetch API Gateway URL
         id: gateway
@@ -204,7 +195,7 @@ jobs:
           echo "GOOGLE_REDIRECT=${url}/login/google/callback" >> $GITHUB_ENV
 
       # -----------------------------
-      # 12. Update .env file with dynamic URLs
+      # 11. Update .env file with dynamic URLs
       # -----------------------------
       - name: Update .env file with dynamic URLs
         run: |
@@ -227,6 +218,19 @@ jobs:
 
           echo "Updated .env with API Gateway URLs:"
           grep "URL" .env || echo "No URLs updated"
+
+      # -----------------------------
+      # 12. Cache Laravel Config/Routes/Views AFTER updating .env
+      # -----------------------------
+      - name: Cache Laravel Config/Routes/Views
+        run: |
+          php artisan config:clear
+          php artisan cache:clear
+          php artisan route:clear
+          php artisan view:clear
+          php artisan config:cache
+          php artisan route:cache
+          php artisan view:cache
 
       # -----------------------------
       # 13a. Check if migration files changed
