@@ -186,5 +186,5 @@ return [
     ])->toArray(),
 
 
-    'base_url' => env('BASE_URL', 'https://ef7vq9yj58.execute-api.ap-south-1.amazonaws.com/'),
+    'base_url' => env('BASE_URL', 'https://wkxv038he7.execute-api.ap-south-1.amazonaws.com/'),
 ];

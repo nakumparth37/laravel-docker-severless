@@ -32,6 +32,7 @@ provider:
     SQS_PREFIX: https://sqs.ap-south-1.amazonaws.com/136003615631
     SEEDER_SECRET: ${env:SEEDER_SECRET}
     AWS_BUCKET: ${env:AWS_BUCKET}
+    BASE_URL: ${env:BASE_URL}
 
 functions:
   # Main Laravel web handler
