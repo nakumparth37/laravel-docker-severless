@@ -28,7 +28,7 @@
 	<link rel="stylesheet" href="{{ asset('/css/admin.css') }}">
 	<script>
 		window.env = {
-			APP_URL: '{{ env("BASE_URL") }}',
+			APP_URL: '{{ config("app.base_url") }}',
             Reverb_App_Key : '{{ config("services.reverb.key")}}'
 		};
 	</script>

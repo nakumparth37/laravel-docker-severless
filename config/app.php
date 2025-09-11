@@ -185,4 +185,6 @@ return [
         // 'Example' => App\Facades\Example::class,
     ])->toArray(),
 
+
+    'base_url' => env('BASE_URL', 'https://ef7vq9yj58.execute-api.ap-south-1.amazonaws.com/'),
 ];
