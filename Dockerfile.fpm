@@ -11,7 +11,7 @@ WORKDIR /var/task
 COPY . .
 
 # Install dependencies (production only)
-RUN composer install --optimize-autoloader --no-dev --no-interaction --no-progress
+RUN composer install --optimize-autoloader --no-interaction --no-progress
 
 # Fix permissions
 RUN chmod -R 777 storage bootstrap/cache
