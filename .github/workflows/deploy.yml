@@ -177,11 +177,22 @@ jobs:
         env:
           SERVERLESS_ACCESS_KEY: ${{ secrets.SERVERLESS_ACCESS_KEY }}
         run: |
-          url=$(sls info --stage dev --verbose | grep "HttpApiUrl" | head -n1 | awk -F": " '{print $2}' | tr -d '\r')
-          if [ -z "$url" ]; then
-            echo "Error: Could not resolve API Gateway URL"
+          # Install jq for JSON parsing
+          sudo apt-get install -y jq
+
+          # Get Serverless output
+          if ! output=$(sls info --stage dev --format json 2>&1); then
+            echo "::error::Serverless info failed: $output"
             exit 1
           fi
+
+          # Extract URL
+          url=$(echo "$output" | jq -r '.service.output.HttpApiUrl // empty')
+          if [ -z "$url" ]; then
+            echo "::error::Could not resolve API Gateway URL in output: $output"
+            exit 1
+          fi
+
           echo "Resolved API Gateway URL: $url"
           echo "APP_URL=$url" >> $GITHUB_ENV
           echo "BASE_URL=${url}/" >> $GITHUB_ENV
