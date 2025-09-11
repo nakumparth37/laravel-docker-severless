@@ -170,31 +170,48 @@ jobs:
         run: serverless deploy
 
       # -----------------------------
-      # 11. Fetch API Gateway URL from Serverless output
+      # 11. Fetch API Gateway URL safely
       # -----------------------------
       - name: Fetch API Gateway URL
         id: gateway
         env:
           SERVERLESS_ACCESS_KEY: ${{ secrets.SERVERLESS_ACCESS_KEY }}
         run: |
-          url=$(sls info --stage dev --verbose | grep "HttpApiUrl" | awk -F": " '{print $2}')
+          url=$(sls info --stage dev --verbose | grep "HttpApiUrl" | head -n1 | awk -F": " '{print $2}' | tr -d '\r')
+          if [ -z "$url" ]; then
+            echo "Error: Could not resolve API Gateway URL"
+            exit 1
+          fi
           echo "Resolved API Gateway URL: $url"
           echo "APP_URL=$url" >> $GITHUB_ENV
-          echo "BASE_URL=$url" >> $GITHUB_ENV
-          echo "OAUTH_REDIRECT_URL=$url/login/github/callback" >> $GITHUB_ENV
-          echo "GOOGLE_REDIRECT=$url/login/google/callback" >> $GITHUB_ENV
+          echo "BASE_URL=${url}/" >> $GITHUB_ENV
+          echo "OAUTH_REDIRECT_URL=${url}/login/github/callback" >> $GITHUB_ENV
+          echo "GOOGLE_REDIRECT=${url}/login/google/callback" >> $GITHUB_ENV
 
       # -----------------------------
       # 12. Update .env file with dynamic URLs
       # -----------------------------
       - name: Update .env file with dynamic URLs
         run: |
-          sed -i "s|^APP_URL=.*|APP_URL=${{ env.APP_URL }}|" .env || echo "APP_URL=${{ env.APP_URL }}" >> .env
-          sed -i "s|^BASE_URL=.*|BASE_URL=${{ env.BASE_URL }}|" .env || echo "BASE_URL=${{ env.BASE_URL }}" >> .env
-          sed -i "s|^OAUTH_REDIRECT_URL=.*|OAUTH_REDIRECT_URL=${{ env.OAUTH_REDIRECT_URL }}|" .env || echo "OAUTH_REDIRECT_URL=${{ env.OAUTH_REDIRECT_URL }}" >> .env
-          sed -i "s|^GOOGLE_REDIRECT=.*|GOOGLE_REDIRECT=${{ env.GOOGLE_REDIRECT }}|" .env || echo "GOOGLE_REDIRECT=${{ env.GOOGLE_REDIRECT }}" >> .env
+          update_env() {
+            key=$1
+            value=$2
+            if [ -n "$value" ]; then
+              if grep -q "^$key=" .env; then
+                sed -i "s|^$key=.*|$key=$value|" .env
+              else
+                echo "$key=$value" >> .env
+              fi
+            fi
+          }
+
+          update_env "APP_URL" "${{ env.APP_URL }}"
+          update_env "BASE_URL" "${{ env.BASE_URL }}"
+          update_env "OAUTH_REDIRECT_URL" "${{ env.OAUTH_REDIRECT_URL }}"
+          update_env "GOOGLE_REDIRECT" "${{ env.GOOGLE_REDIRECT }}"
+
           echo "Updated .env with API Gateway URLs:"
-          grep "URL" .env
+          grep "URL" .env || echo "No URLs updated"
 
       # -----------------------------
       # 13a. Check if migration files changed
