@@ -58,9 +58,6 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
 
-      - name: Test AWS CLI
-        run: aws sts get-caller-identity
-
       # -----------------------------
       # 5. Create Base .env file (without URL values)
       # -----------------------------
@@ -269,3 +266,12 @@ jobs:
             --include "js/*" \
             --include "css/*" \
             --delete
+
+      - name: Check BASE_URL in Docker
+        run: |
+          docker run --rm \
+            --network host \
+            --env-file .env \
+            --entrypoint "" \
+            ${{ secrets.ECR_REGISTRY }}/lambda-fpm:latest \
+            php artisan tinker --execute="echo env('BASE_URL');"
