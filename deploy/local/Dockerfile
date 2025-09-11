@@ -82,8 +82,8 @@ RUN apk add --no-cache \
 # copy files from the build stage
 COPY --from=build /var/www/html /var/www/html
 COPY --from=composer:2.7.6 /usr/bin/composer /usr/bin/composer
-COPY ./deploy/nginx.conf /etc/nginx/http.d/default.conf
-COPY ./deploy/php.ini "$PHP_INI_DIR/conf.d/app.ini"
+COPY ./deploy/local/nginx.conf /etc/nginx/http.d/default.conf
+# COPY ./deploy/php.ini "$PHP_INI_DIR/conf.d/app.ini"
 
 WORKDIR /var/www/html
 

@@ -10,8 +10,6 @@ services:
     volumes:
       - .:/var/www/html
       - ./deploy/storage/app:/var/www/html/storage/app
-    # env_file:
-    #   - ./app/.env
     ports:
       - "8084:80"
     networks:

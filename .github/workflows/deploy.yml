@@ -178,11 +178,11 @@ jobs:
           SERVERLESS_ACCESS_KEY: ${{ secrets.SERVERLESS_ACCESS_KEY }}
         run: |
           url=$(sls info --stage dev --verbose | grep "HttpApiUrl" | awk '{print $2}')
-          echo $url
+          echo "Resolved API Gateway URL: $url"
           echo "APP_URL=$url" >> $GITHUB_ENV
-          echo "BASE_URL=${url}/" >> $GITHUB_ENV
-          echo "OAUTH_REDIRECT_URL=${url}/login/github/callback" >> $GITHUB_ENV
-          echo "GOOGLE_REDIRECT=${url}/login/google/callback" >> $GITHUB_ENV
+          echo "BASE_URL=$url" >> $GITHUB_ENV
+          echo "OAUTH_REDIRECT_URL=$url/login/github/callback" >> $GITHUB_ENV
+          echo "GOOGLE_REDIRECT=$url/login/google/callback" >> $GITHUB_ENV
 
       # -----------------------------
       # 12. Update .env file with dynamic URLs
