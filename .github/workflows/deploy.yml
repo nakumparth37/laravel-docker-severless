@@ -90,7 +90,7 @@ jobs:
           echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" >> .env
           echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> .env
           echo "AWS_DEFAULT_REGION=ap-south-1" >> .env
-          echo "AWS_BUCKET=laravel-dev-aws-storage" >> .env
+          echo "AWS_BUCKET=${{secret.AWS_BUCKET}}" >> .env
           echo "AWS_USE_PATH_STYLE_ENDPOINT=false" >> .env
           echo "AWS_URL=https://laravel-dev-aws-storage.s3.amazonaws.com" >> .env
 

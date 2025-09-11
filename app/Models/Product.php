@@ -39,7 +39,6 @@ class Product extends Model
             $folder = "Product/Product_$this->id/thumbnail";
 
             $path = $thumbnail->storeAs($folder, $thumbnailName, 's3');
-
             return Storage::disk('s3')->url($path);
         } else {
             throw new \Exception('Invalid storage type');
