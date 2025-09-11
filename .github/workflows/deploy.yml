@@ -177,17 +177,20 @@ jobs:
         env:
           SERVERLESS_ACCESS_KEY: ${{ secrets.SERVERLESS_ACCESS_KEY }}
         run: |
-          # Install jq for JSON parsing
-          sudo apt-get install -y jq
-
-          # Get Serverless output
-          if ! output=$(sls info --stage dev --format json 2>&1); then
+          # Use verbose text output instead of JSON format
+          if ! output=$(sls info --stage dev --verbose 2>&1); then
             echo "::error::Serverless info failed: $output"
             exit 1
           fi
 
-          # Extract URL
-          url=$(echo "$output" | jq -r '.service.output.HttpApiUrl // empty')
+          # Extract URL from text output (adjust grep pattern if needed)
+          url=$(echo "$output" | grep "HttpApiUrl" | head -n1 | awk -F": " '{print $2}' | tr -d '\r')
+
+          # Alternative extraction method using Serverless output pattern
+          if [ -z "$url" ]; then
+            url=$(echo "$output" | grep -o "HttpApiUrl: [^ ]*" | cut -d' ' -f2)
+          fi
+
           if [ -z "$url" ]; then
             echo "::error::Could not resolve API Gateway URL in output: $output"
             exit 1
