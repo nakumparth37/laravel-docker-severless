@@ -196,7 +196,8 @@ jobs:
             exit 1
           fi
 
-          echo "Resolved API Gateway URL: $url"
+          echo "Resolved APP_URL : $url"
+          echo "Resolved BASE URL: ${url}/"
           echo "APP_URL=$url" >> $GITHUB_ENV
           echo "BASE_URL=${url}/" >> $GITHUB_ENV
           echo "OAUTH_REDIRECT_URL=${url}/login/github/callback" >> $GITHUB_ENV
