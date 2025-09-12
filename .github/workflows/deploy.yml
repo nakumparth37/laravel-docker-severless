@@ -1,3 +1,4 @@
+# .github/workflows/deploy.yml
 name: Laravel Fargate CI/CD
 
 on:
@@ -17,11 +18,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    # 1. Checkout code
+    # 1 Checkout code
     - name: Checkout code
       uses: actions/checkout@v3
 
-    # 2. Configure AWS credentials
+    # 2 Configure AWS credentials
     - name: Configure AWS Credentials
       uses: aws-actions/configure-aws-credentials@v2
       with:
@@ -29,27 +30,85 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ env.AWS_REGION }}
 
-    # 3. Login to Amazon ECR
+    # 3 Create .env dynamically
+    - name: Create .env file
+      run: |
+        cat <<EOF > .env
+          APP_NAME=Serverless-App
+          APP_ENV=production
+          APP_KEY=${{ secrets.APP_KEY }}
+          APP_DEBUG=false
+          APP_URL=https://your-alb-dns
+
+          DB_CONNECTION=mysql
+          DB_HOST=${{ secrets.DB_HOST }}
+          DB_PORT=3306
+          DB_DATABASE=laravel_db
+          DB_USERNAME=admin
+          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+
+          QUEUE_CONNECTION=sqs
+          SQS_PREFIX=https://sqs.ap-south-1.amazonaws.com/136003615631
+          SQS_QUEUE=laravel-queue
+
+          FILESYSTEM_DISK=s3
+          AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION=ap-south-1
+          AWS_BUCKET=${{ secrets.AWS_BUCKET }}
+          AWS_USE_PATH_STYLE_ENDPOINT=false
+          AWS_URL=https://laravel-dev-aws-storage.s3.amazonaws.com
+
+          SESSION_DRIVER=cookie
+          CACHE_DRIVER=file
+
+          MAIL_MAILER=smtp
+          MAIL_HOST=mail.mailtest.radixweb.net
+          MAIL_PORT=587
+          MAIL_USERNAME=testphp@mailtest.radixweb.net
+          MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}
+          MAIL_ENCRYPTION=null
+          MAIL_FROM_ADDRESS=testmobile@mailtest.radixweb.net
+          MAIL_FROM_NAME=Serverless-App
+
+          GITHUB_CLIENT_ID=${{ secrets.OAUTH_GITHUB_CLIENT_ID }}
+          GITHUB_CLIENT_SECRET=${{ secrets.OAUTH_GITHUB_CLIENT_SECRET }}
+          OAUTH_REDIRECT_URL=https://your-alb-dns/login/github/callback
+
+          GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}
+          GOOGLE_REDIRECT=https://your-alb-dns/login/google/callback
+
+          PAYPAL_MODE=sandbox
+          PAYPAL_SANDBOX_CLIENT_ID=${{ secrets.PAYPAL_SANDBOX_CLIENT_ID }}
+          PAYPAL_SANDBOX_CLIENT_SECRET=${{ secrets.PAYPAL_SANDBOX_CLIENT_SECRET }}
+
+          PASSPORT_PERSONAL_ACCESS_CLIENT_ID=6
+          PASSPORT_PERSONAL_ACCESS_CLIENT_SECRET=${{ secrets.PASSPORT_PERSONAL_ACCESS_CLIENT_SECRET }}
+          SEEDER_SECRET=${{ secrets.SEEDER_SECRET }}
+          EOF
+
+    # 4 Login to Amazon ECR
     - name: Login to Amazon ECR
       run: |
         aws ecr get-login-password --region ${{ env.AWS_REGION }} | docker login --username AWS --password-stdin ${{ env.ECR_REPOSITORY }}
 
-    # 4. Build Docker image
+    # 5 Build Docker image
     - name: Build Docker Image
       run: |
         docker build -f deploy/ecs/Dockerfile -t ${{ env.ECR_REPOSITORY }}:latest .
 
-    # 5. Push Docker image to ECR
+    # 6 Push Docker image to ECR
     - name: Push Docker Image
       run: |
         docker push ${{ env.ECR_REPOSITORY }}:latest
 
-    # 6. Update Task Definition image
+    # 7 Update ECS Task Definition image
     - name: Update Task Definition
       run: |
         jq --arg IMAGE "${{ env.ECR_REPOSITORY }}:latest" '.containerDefinitions[0].image = $IMAGE' ${{ env.TASK_DEFINITION_FILE }} > task-def.json
 
-    # 7. Register ECS Task Definition
+    # 8 Register ECS Task Definition
     - name: Register ECS Task Definition
       id: register-task
       run: |
@@ -59,7 +118,7 @@ jobs:
           --output text)
         echo "TASK_DEFINITION_ARN=$TASK_ARN" >> $GITHUB_ENV
 
-    # 8. Update ECS Service
+    # 9 Update ECS Service
     - name: Update ECS Service
       run: |
         aws ecs update-service \
@@ -68,7 +127,7 @@ jobs:
           --task-definition ${{ env.TASK_DEFINITION_ARN }} \
           --force-new-deployment
 
-    # 9. Wait for ECS service stability (optional)
+    # 10 Wait for ECS service stability (optional)
     - name: Wait for ECS service stability
       run: |
         aws ecs wait services-stable \

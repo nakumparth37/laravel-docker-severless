@@ -32,7 +32,7 @@ WORKDIR /var/www/html
 COPY . .
 
 # Copy .env.production as .env
-COPY .env.production .env
+COPY .env .env
 
 # Set permissions
 RUN chown -R www-data:www-data /var/www/html \
