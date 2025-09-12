@@ -18,9 +18,23 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    # 1 Checkout code
-    - name: Checkout code
+    # -----------------------------
+    # 1. Checkout Code
+    # -----------------------------
+    - name: Checkout Code
       uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    # -----------------------------
+    # 1.1 Set Up PHP
+    # -----------------------------
+    - name: Set Up PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.3'
+        extensions: mbstring, bcmath, pdo, pdo_mysql
+        coverage: none
 
     # 2 Configure AWS credentials
     - name: Configure AWS Credentials
@@ -120,15 +134,16 @@ jobs:
           --output text)
         echo "TASK_DEFINITION_ARN=$TASK_ARN" >> $GITHUB_ENV
 
-    - name: Ensure ECS service exists
+    - name: Ensure ECS service exists with ALB
       run: |
         SERVICE=$(aws ecs describe-services \
             --cluster ${{ env.CLUSTER_NAME }} \
             --services ${{ env.SERVICE_NAME }} \
             --query "services[0].status" \
             --output text)
+
         if [ "$SERVICE" == "None" ] || [ -z "$SERVICE" ]; then
-            echo "Service not found. Creating ECS service..."
+            echo "Service not found. Creating ECS service with ALB..."
             aws ecs create-service \
               --cluster ${{ env.CLUSTER_NAME }} \
               --service-name ${{ env.SERVICE_NAME }} \
@@ -136,19 +151,23 @@ jobs:
               --desired-count 1 \
               --launch-type FARGATE \
               --network-configuration "awsvpcConfiguration={subnets=[subnet-07b19d6f11571ee15,subnet-00fec2f12e9d6b568,subnet-0790112de9054aa3d],securityGroups=[sg-0660b09322887db31],assignPublicIp=ENABLED}" \
+              --load-balancers "targetGroupArn=arn:aws:elasticloadbalancing:ap-south-1:136003615631:targetgroup/your-target-group,containerName=laravel-php,containerPort=80" \
               --region ${{ env.AWS_REGION }}
         else
             echo "Service exists: $SERVICE"
         fi
 
+
     # 9. Update ECS Service
-    - name: Update ECS Service
+    - name: Update ECS Service with ALB
       run: |
         aws ecs update-service \
           --cluster ${{ env.CLUSTER_NAME }} \
           --service ${{ env.SERVICE_NAME }} \
           --task-definition ${{ env.TASK_DEFINITION_ARN }} \
-          --force-new-deployment
+          --force-new-deployment \
+          --load-balancers "targetGroupArn=arn:aws:elasticloadbalancing:ap-south-1:136003615631:targetgroup/your-target-group,containerName=laravel-php,containerPort=80"
+
 
     # 10. Enable Execute Command
     - name: Enable Execute Command on ECS Service

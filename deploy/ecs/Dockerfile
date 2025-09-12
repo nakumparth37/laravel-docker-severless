@@ -1,3 +1,20 @@
+# --- Build PHP deps ---
+FROM composer:2.7.6 AS vendor
+WORKDIR /app
+COPY composer.json composer.lock ./
+RUN composer install --no-dev --optimize-autoloader
+COPY . .
+RUN composer dump-autoload --optimize
+
+# --- Build Node deps ---
+FROM node:20-alpine AS node
+WORKDIR /app
+COPY package.json package-lock.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+# --- Runtime image ---
 FROM php:8.3-fpm-alpine as php-base
 
 # Install dependencies
