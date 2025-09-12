@@ -166,7 +166,7 @@ jobs:
           --service ${{ env.SERVICE_NAME }} \
           --task-definition ${{ env.TASK_DEFINITION_ARN }} \
           --force-new-deployment \
-          --load-balancers "targetGroupArn=arn:aws:elasticloadbalancing:ap-south-1:136003615631:targetgroup/your-target-group,containerName=laravel-php,containerPort=80"
+          --load-balancers "targetGroupArn=arn:aws:elasticloadbalancing:ap-south-1:136003615631:targetgroup/laravel-tg/fbf472fd5f7f275d,containerName=laravel-php,containerPort=80"
 
 
     # 10. Enable Execute Command
