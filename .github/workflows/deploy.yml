@@ -120,6 +120,27 @@ jobs:
           --output text)
         echo "TASK_DEFINITION_ARN=$TASK_ARN" >> $GITHUB_ENV
 
+    - name: Ensure ECS service exists
+      run: |
+        SERVICE=$(aws ecs describe-services \
+            --cluster ${{ env.CLUSTER_NAME }} \
+            --services ${{ env.SERVICE_NAME }} \
+            --query "services[0].status" \
+            --output text)
+        if [ "$SERVICE" == "None" ] || [ -z "$SERVICE" ]; then
+            echo "Service not found. Creating ECS service..."
+            aws ecs create-service \
+              --cluster ${{ env.CLUSTER_NAME }} \
+              --service-name ${{ env.SERVICE_NAME }} \
+              --task-definition ${{ env.TASK_DEFINITION_ARN }} \
+              --desired-count 1 \
+              --launch-type FARGATE \
+              --network-configuration "awsvpcConfiguration={subnets=[subnet-xxxxxx],securityGroups=[sg-xxxxxx],assignPublicIp=ENABLED}" \
+              --region ${{ env.AWS_REGION }}
+        else
+            echo "Service exists: $SERVICE"
+        fi
+
     # 9. Update ECS Service
     - name: Update ECS Service
       run: |
