@@ -151,7 +151,7 @@ jobs:
               --desired-count 1 \
               --launch-type FARGATE \
               --network-configuration "awsvpcConfiguration={subnets=[subnet-07b19d6f11571ee15,subnet-00fec2f12e9d6b568,subnet-0790112de9054aa3d],securityGroups=[sg-0660b09322887db31],assignPublicIp=ENABLED}" \
-              --load-balancers "targetGroupArn=arn:aws:elasticloadbalancing:ap-south-1:136003615631:targetgroup/your-target-group,containerName=laravel-php,containerPort=80" \
+              --load-balancers "targetGroupArn=arn:aws:elasticloadbalancing:ap-south-1:136003615631:targetgroup/laravel-tg/fbf472fd5f7f275d,containerName=laravel-php,containerPort=80" \
               --region ${{ env.AWS_REGION }}
         else
             echo "Service exists: $SERVICE"
