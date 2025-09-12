@@ -103,12 +103,14 @@ jobs:
       run: |
         docker push ${{ env.ECR_REPOSITORY }}:latest
 
-    # 7 Update ECS Task Definition image
+    # 7. Update Task Definition image (remove enableExecuteCommand)
     - name: Update Task Definition
       run: |
-        jq --arg IMAGE "${{ env.ECR_REPOSITORY }}:latest" '.containerDefinitions[0].image = $IMAGE' ${{ env.TASK_DEFINITION_FILE }} > task-def.json
+        jq --arg IMAGE "${{ env.ECR_REPOSITORY }}:latest" \
+        'del(.enableExecuteCommand) | .containerDefinitions[0].image = $IMAGE' \
+        ${{ env.TASK_DEFINITION_FILE }} > task-def.json
 
-    # 8 Register ECS Task Definition
+    # 8. Register ECS Task Definition
     - name: Register ECS Task Definition
       id: register-task
       run: |
@@ -118,7 +120,7 @@ jobs:
           --output text)
         echo "TASK_DEFINITION_ARN=$TASK_ARN" >> $GITHUB_ENV
 
-    # 9 Update ECS Service
+    # 9. Update ECS Service
     - name: Update ECS Service
       run: |
         aws ecs update-service \
@@ -127,7 +129,15 @@ jobs:
           --task-definition ${{ env.TASK_DEFINITION_ARN }} \
           --force-new-deployment
 
-    # 10 Wait for ECS service stability (optional)
+    # 10. Enable Execute Command
+    - name: Enable Execute Command on ECS Service
+      run: |
+        aws ecs update-service \
+          --cluster ${{ env.CLUSTER_NAME }} \
+          --service ${{ env.SERVICE_NAME }} \
+          --enable-execute-command
+
+    # 11. Wait for ECS service stability
     - name: Wait for ECS service stability
       run: |
         aws ecs wait services-stable \
