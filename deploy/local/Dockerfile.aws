@@ -1,0 +1,33 @@
+FROM amazonlinux:2023
+
+# Install dependencies (skip curl)
+RUN yum update -y \
+    && yum install -y \
+       git \
+       zip \
+       libzip \
+       freetype \
+       libjpeg-turbo \
+       libpng \
+       freetype-devel \
+       libjpeg-turbo-devel \
+       libpng-devel \
+       nginx \
+       nodejs \
+       npm \
+       python3 \
+       unzip \
+       groff \
+       less \
+       bash \
+       jq \
+    && yum clean all
+
+# Install AWS CLI v2
+RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "/tmp/awscliv2.zip" \
+    && unzip /tmp/awscliv2.zip -d /tmp \
+    && /tmp/aws/install -i /usr/local/aws-cli -b /usr/local/bin \
+    && rm -rf /tmp/aws /tmp/awscliv2.zip
+
+# Verify AWS CLI
+RUN /usr/local/bin/aws --version

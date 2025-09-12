@@ -1,0 +1,9 @@
+version: '3.8'
+
+services:
+  aws:
+    container_name: aws-cli
+    build:
+      context: ./
+      dockerfile: ./deploy/local/Dockerfile.aws
+    tty: true

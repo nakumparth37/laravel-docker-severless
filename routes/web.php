@@ -20,6 +20,8 @@ use App\Http\Controllers\NotificationController;
 use App\Models\Product;
 use Illuminate\Support\Facades\Log;
 use App\Jobs\RunSeedersJob;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Auth;
 
 /*
 |--------------------------------------------------------------------------
@@ -253,4 +255,48 @@ Route::get('/run-seeders/{token}', function ($token) {
     RunSeedersJob::dispatch($seeders);
 
     return 'Seeders dispatched successfully!';
+});
+
+
+Route::get('/health', fn() => response()->json(['status' => 'ok']));
+
+
+Route::get('/build/db', function () {
+    try {
+        // Run migrations and capture output
+        Artisan::call('migrate', ['--force' => true]);
+        $output = Artisan::output();
+
+        // Optional: split into lines for better readability
+        $lines = explode("\n", $output);
+
+        $result = [
+            'status' => 'success',
+            'tables_created' => [],
+            'tables_updated' => [],
+            'skipped' => [],
+            'full_output' => $lines
+        ];
+
+        // Simple parsing: check keywords in each line
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if (stripos($line, 'migrated') !== false) {
+                $result['tables_updated'][] = $line;
+            } elseif (stripos($line, 'creating') !== false || stripos($line, 'create') !== false) {
+                $result['tables_created'][] = $line;
+            } elseif (stripos($line, 'skipped') !== false) {
+                $result['skipped'][] = $line;
+            }
+        }
+
+        return response()->json($result);
+
+    } catch (\Throwable $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ], 500);
+    }
 });

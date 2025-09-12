@@ -79,6 +79,27 @@ RUN apk add --no-cache \
     && rm -rf /var/cache/apk/* \
     && docker-php-ext-install pcntl
 
+# Install dependencies
+RUN apk add --no-cache \
+    python3 \
+    py3-pip \
+    curl \
+    unzip \
+    groff \
+    less \
+    bash \
+    jq
+
+
+# Install AWS CLI v2 (Alpine compatible)
+RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "/tmp/awscliv2.zip" \
+    && unzip /tmp/awscliv2.zip -d /tmp \
+    && /tmp/aws/install -i /usr/local/aws-cli -b /usr/local/bin \
+    && rm -rf /tmp/aws /tmp/awscliv2.zip
+
+# Verify
+RUN aws --version
+
 # copy files from the build stage
 COPY --from=build /var/www/html /var/www/html
 COPY --from=composer:2.7.6 /usr/bin/composer /usr/bin/composer

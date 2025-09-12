@@ -34,3 +34,17 @@ Push the Docker image to your AWS ECR repository:
 ```bash
 docker push 136003615631.dkr.ecr.ap-south-1.amazonaws.com/lambda-compatible-image1:latest
 ```
+
+
+
+
+docker tag laravel-php:latest 136003615631.dkr.ecr.ap-south-1.amazonaws.com/laravel-php:latest
+docker tag laravel-nginx:latest 136003615631.dkr.ecr.ap-south-1.amazonaws.com/laravel-nginx:latest
+
+
+
+docker push 136003615631.dkr.ecr.ap-south-1.amazonaws.com/laravel-php:latest
+docker push 136003615631.dkr.ecr.ap-south-1.amazonaws.com/laravel-nginx:latest
+
+
+aws ecs execute-command --cluster laravel-cluster37 --task 0d97ca15f4584eb08da1874f5c66c4b2 --container laravel-php --interactive --command '/bin/sh'

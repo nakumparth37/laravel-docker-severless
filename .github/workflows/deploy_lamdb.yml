@@ -1,0 +1,277 @@
+name: Laravel-serverless CI/CD (Serverless + ECR + Lambda)
+
+on:
+  push:
+    branches:
+      - main  # default branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: ${{ secrets.AWS_DEFAULT_REGION }}
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      APP_KEY: ${{ secrets.APP_KEY }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      DB_HOST: ${{ secrets.DB_HOST }}
+
+    steps:
+      # -----------------------------
+      # 1. Checkout Code
+      # -----------------------------
+      - name: Checkout Code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      # -----------------------------
+      # 2. Set Up PHP
+      # -----------------------------
+      - name: Set Up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, bcmath, pdo, pdo_mysql
+          coverage: none
+
+      # -----------------------------
+      # 3. Set Up Node.js
+      # -----------------------------
+      - name: Set Up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Build frontend assets
+        run: |
+          npm ci
+          npm run prod
+
+      # -----------------------------
+      # 4. Configure AWS Credentials
+      # -----------------------------
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_DEFAULT_REGION }}
+
+      # -----------------------------
+      # 5. Create Base .env file (without URL values)
+      # -----------------------------
+      - name: Create base .env
+        run: |
+          echo "APP_NAME=Serverless-App" >> .env
+          echo "APP_ENV=local" >> .env
+          echo "APP_KEY=${{ secrets.APP_KEY }}" >> .env
+          echo "APP_DEBUG=true" >> .env
+          # URL values will be injected later
+
+          echo "LOG_CHANNEL=stderr" >> .env
+          echo "LOG_LEVEL=info" >> .env
+
+          echo "DB_CONNECTION=mysql" >> .env
+          echo "DB_HOST=${{ secrets.DB_HOST }}" >> .env
+          echo "DB_PORT=3306" >> .env
+          echo "DB_DATABASE=laravel_db" >> .env
+          echo "DB_USERNAME=admin" >> .env
+          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> .env
+
+          echo "QUEUE_CONNECTION=sqs" >> .env
+          echo "SQS_PREFIX=https://sqs.ap-south-1.amazonaws.com/870968578789" >> .env
+          echo "SQS_QUEUE=laravel-queue" >> .env
+
+          echo "FILESYSTEM_DISK=s3" >> .env
+          echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" >> .env
+          echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> .env
+          echo "AWS_DEFAULT_REGION=ap-south-1" >> .env
+          echo "AWS_BUCKET=${{ secrets.AWS_BUCKET }}" >> .env
+          echo "AWS_USE_PATH_STYLE_ENDPOINT=false" >> .env
+          echo "AWS_URL=https://laravel-dev-aws-storage.s3.amazonaws.com" >> .env
+
+          echo "SESSION_DRIVER=cookie" >> .env
+          echo "CACHE_DRIVER=file" >> .env
+
+          echo "MAIL_MAILER=smtp" >> .env
+          echo "MAIL_HOST=mail.mailtest.radixweb.net" >> .env
+          echo "MAIL_PORT=587" >> .env
+          echo "MAIL_USERNAME=testphp@mailtest.radixweb.net" >> .env
+          echo "MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}" >> .env
+          echo "MAIL_ENCRYPTION=null" >> .env
+          echo "MAIL_FROM_ADDRESS=testmobile@mailtest.radixweb.net" >> .env
+          echo "MAIL_FROM_NAME=Serverless-App" >> .env
+
+          echo "GITHUB_CLIENT_ID=${{ secrets.OAUTH_GITHUB_CLIENT_ID }}" >> .env
+          echo "GITHUB_CLIENT_SECRET=${{ secrets.OAUTH_GITHUB_CLIENT_SECRET }}" >> .env
+
+          echo "GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }}" >> .env
+          echo "GOOGLE_CLIENT_SECRET=${{ secrets.GOOGLE_CLIENT_SECRET }}" >> .env
+
+          echo "PAYPAL_MODE=sandbox" >> .env
+          echo "PAYPAL_SANDBOX_CLIENT_ID=${{ secrets.PAYPAL_SANDBOX_CLIENT_ID }}" >> .env
+          echo "PAYPAL_SANDBOX_CLIENT_SECRET=${{ secrets.PAYPAL_SANDBOX_CLIENT_SECRET }}" >> .env
+
+          echo "PASSPORT_PERSONAL_ACCESS_CLIENT_ID=6" >> .env
+          echo "PASSPORT_PERSONAL_ACCESS_CLIENT_SECRET=${{ secrets.PASSPORT_PERSONAL_ACCESS_CLIENT_SECRET }}" >> .env
+          echo "SEEDER_SECRET=${{ secrets.SEEDER_SECRET }}" >> .env
+          echo "ASSET_URL=${{ secrets.ASSET_URL }}" >> .env
+
+      # -----------------------------
+      # 6. Install Composer Dependencies
+      # -----------------------------
+      - name: Install Composer Dependencies
+        run: composer install --optimize-autoloader
+
+      # -----------------------------
+      # 7. Install Serverless CLI
+      # -----------------------------
+      - name: Install Serverless CLI
+        run: npm install -g serverless@4
+
+      # -----------------------------
+      # 8. Build and Push Docker Image to ECR
+      # -----------------------------
+      - name: Authenticate to ECR
+        run: |
+          aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY }}
+
+      - name: Build & Push FPM Image
+        run: |
+          IMAGE_NAME=${{ secrets.ECR_REGISTRY }}/lambda-fpm:latest
+          docker build -f Dockerfile.fpm -t $IMAGE_NAME .
+          docker push $IMAGE_NAME
+
+      - name: Build & Push Console Image
+        run: |
+          IMAGE_NAME=${{ secrets.ECR_REGISTRY }}/lambda-console:latest
+          docker build -f Dockerfile.console -t $IMAGE_NAME .
+          docker push $IMAGE_NAME
+
+      # -----------------------------
+      # 9. Deploy Lambda using Serverless
+      # -----------------------------
+      - name: Deploy Laravel to Lambda
+        env:
+          SERVERLESS_ACCESS_KEY: ${{ secrets.SERVERLESS_ACCESS_KEY }}
+        run: serverless deploy
+
+      # -----------------------------
+      # 10. Fetch API Gateway URL safely
+      # -----------------------------
+      - name: Fetch API Gateway URL
+        id: gateway
+        env:
+          SERVERLESS_ACCESS_KEY: ${{ secrets.SERVERLESS_ACCESS_KEY }}
+        run: |
+          # Use verbose text output instead of JSON format
+          if ! output=$(sls info --stage dev --verbose 2>&1); then
+            echo "::error::Serverless info failed: $output"
+            exit 1
+          fi
+
+          # Extract URL from text output (adjust grep pattern if needed)
+          url=$(echo "$output" | grep "HttpApiUrl" | head -n1 | awk -F": " '{print $2}' | tr -d '\r')
+
+          # Alternative extraction method using Serverless output pattern
+          if [ -z "$url" ]; then
+            url=$(echo "$output" | grep -o "HttpApiUrl: [^ ]*" | cut -d' ' -f2)
+          fi
+
+          if [ -z "$url" ]; then
+            echo "::error::Could not resolve API Gateway URL in output: $output"
+            exit 1
+          fi
+
+          echo "Resolved APP_URL : $url"
+          echo "Resolved BASE URL: ${url}/"
+          echo "APP_URL=$url" >> $GITHUB_ENV
+          echo "BASE_URL=${url}/" >> $GITHUB_ENV
+          echo "OAUTH_REDIRECT_URL=${url}/login/github/callback" >> $GITHUB_ENV
+          echo "GOOGLE_REDIRECT=${url}/login/google/callback" >> $GITHUB_ENV
+
+      # -----------------------------
+      # 11. Update .env file with dynamic URLs
+      # -----------------------------
+      - name: Update .env file with dynamic URLs
+        run: |
+          update_env() {
+            key=$1
+            value=$2
+            if [ -n "$value" ]; then
+              if grep -q "^$key=" .env; then
+                sed -i "s|^$key=.*|$key=$value|" .env
+              else
+                echo "$key=$value" >> .env
+              fi
+            fi
+          }
+
+          update_env "APP_URL" "${{ env.APP_URL }}"
+          update_env "BASE_URL" "${{ env.BASE_URL }}"
+          update_env "OAUTH_REDIRECT_URL" "${{ env.OAUTH_REDIRECT_URL }}"
+          update_env "GOOGLE_REDIRECT" "${{ env.GOOGLE_REDIRECT }}"
+
+          echo "Updated .env with API Gateway URLs:"
+          grep "URL" .env || echo "No URLs updated"
+
+      # -----------------------------
+      # 12. Cache Laravel Config/Routes/Views AFTER updating .env
+      # -----------------------------
+      - name: Cache Laravel Config/Routes/Views
+        run: |
+          php artisan config:clear
+          php artisan cache:clear
+          php artisan route:clear
+          php artisan view:clear
+          php artisan config:cache
+          php artisan route:cache
+          php artisan view:cache
+
+      # -----------------------------
+      # 13a. Check if migration files changed
+      # -----------------------------
+      - name: Check if migration files changed
+        id: check_migrations
+        run: |
+          if git diff --name-only ${{ github.event.before }} ${{ github.sha }} | grep -q '^database/migrations/'; then
+            echo "migrations_changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "migrations_changed=false" >> $GITHUB_OUTPUT
+          fi
+
+      # -----------------------------
+      # 13b. Run Laravel Migrations via Lambda (only if changed)
+      # -----------------------------
+      - name: Run DB Migrations
+        if: steps.check_migrations.outputs.migrations_changed == 'true'
+        run: |
+          docker run --rm \
+            --network host \
+            --env-file .env \
+            --entrypoint "" \
+            ${{ secrets.ECR_REGISTRY }}/lambda-fpm:latest \
+            php artisan migrate --force
+
+      # -----------------------------
+      # 14. Upload all the public data in to S3
+      # -----------------------------
+      - name: Upload assets to S3
+        env:
+          SERVERLESS_ACCESS_KEY: ${{ secrets.SERVERLESS_ACCESS_KEY }}
+        run: |
+          aws s3 sync public/ s3://laravel-app-assets-prod/ \
+            --exclude "*" \
+            --include "js/*" \
+            --include "css/*" \
+            --delete
+
+      - name: Check BASE_URL in Docker
+        run: |
+          docker run --rm \
+            --network host \
+            --env-file .env \
+            --entrypoint "" \
+            ${{ secrets.ECR_REGISTRY }}/lambda-fpm:latest \
+            php artisan tinker --execute="echo env('BASE_URL');"
